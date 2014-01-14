@@ -2,7 +2,8 @@
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import cross_validation
-from numpy import genfromtxt, savetxt
+from sklearn.decomposition import RandomizedPCA
+from numpy import genfromtxt, savetxt, concatenate
 
 def main():
     #create the training & test sets, skipping the header row with [1:]
@@ -15,13 +16,17 @@ def main():
     train_train, train_test, target_train, target_test = cross_validation.train_test_split(train, target, test_size=0.4, random_state=0)
     print train_train.shape
     print train_test.shape
+
+    #PCA
+    pca = RandomizedPCA(n_components=9)
+    pca.fit(train_train)
     
     #create and train the random forest
     rf = RandomForestClassifier(n_estimators=50, n_jobs=2)
-    rf.fit(train_train, target_train)
-    print "crossval score is: ", rf.score(train_test, target_test)
+    rf.fit(concatenate(train_train, pca.transform(train_train)), target_train)
+    print "crossval score is: ", rf.score(concatenate(train_test, pca.transform(train_train)), target_test)
 
-    savetxt('data/submission.csv', rf.predict(test), delimiter=',', fmt='%f')
+    savetxt('data/submission.csv', rf.predict(concatenate(test, pca.transform(test))), delimiter=',', fmt='%f')
 
 if __name__=="__main__":
     main()
