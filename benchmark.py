@@ -4,13 +4,14 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn import cross_validation
 from sklearn.decomposition import RandomizedPCA
 from numpy import genfromtxt, savetxt, hstack
+import numpy as np
 
 def main():
     #create the training & test sets, skipping the header row with [1:]
-    dataset = genfromtxt(open('data/train.csv','r'), delimiter=',', dtype='i2')[1:]    
+    dataset = genfromtxt(open('data/train.csv','r'), delimiter=',', dtype='u1')[1:]    
     target = [x[0] for x in dataset]
     train = [x[1:] for x in dataset]
-    test = genfromtxt(open('data/test.csv','r'), delimiter=',', dtype='i2')[1:]
+    test = genfromtxt(open('data/test.csv','r'), delimiter=',', dtype='u1')[1:]
 
     #build crossvalidation training set
     train_train, train_test, target_train, target_test = cross_validation.train_test_split(train, target, test_size=0.2, random_state=0)
@@ -26,12 +27,10 @@ def main():
     rf.fit(hstack((train_train, pca.transform(train_train))), target_train)
     print "crossval score is: ", rf.score(hstack((train_test, pca.transform(train_test))), target_test)
 
-    prediction = rf.predict(hstack((test, pca.transform(test))))
-    with open('data/submission.csv', "wb") as out:
-        out.write("ImageId,Label\n")
-        for i, value in enumerate(prediction):
-            out.write("%s,%s\n" % (i+1, value))
+    labelid = np.array(range(1,28000))
 
+    output = rf.predict(hstack((test, pca.transform(test))))
+    savetxt('data/submission.csv', np.column_stack((labelid, output)), delimiter=',', header="ImageId,Label", fmt='%f')
 
 if __name__=="__main__":
     main()
