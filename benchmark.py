@@ -23,14 +23,14 @@ def main():
     pca.fit(train_train)
     
     #create and train the random forest
-    rf = RandomForestClassifier(n_estimators=1000, n_jobs=2)
+    rf = RandomForestClassifier(n_estimators=1000, n_jobs=4)
     rf.fit(hstack((train_train, pca.transform(train_train))), target_train)
     print "crossval score is: ", rf.score(hstack((train_test, pca.transform(train_test))), target_test)
 
-    labelid = np.array(range(1,28000))
+    labelid = np.array(range(1,28001))
 
     output = rf.predict(hstack((test, pca.transform(test))))
-    savetxt('data/submission.csv', np.column_stack((labelid, output)), delimiter=',', header="ImageId,Label", fmt='%f')
+    savetxt('data/submission.csv', np.column_stack((labelid, output)), delimiter=',', header="ImageId,Label", fmt='%u', comments='')
 
 if __name__=="__main__":
     main()
